@@ -6,16 +6,17 @@ import java.util.List;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 import com.inaer.calculator.shared.FieldVerifier;
+import com.sencha.gxt.cell.core.client.ButtonCell.ButtonScale;
+import com.sencha.gxt.widget.core.client.button.TextButton;
+import com.sencha.gxt.widget.core.client.event.SelectEvent;
+import com.sencha.gxt.widget.core.client.event.SelectEvent.SelectHandler;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -27,9 +28,9 @@ public class SimpleCalculator implements EntryPoint {
 	 */
 	private static final String SERVER_ERROR = "An error occurred while "
 			+ "attempting to contact the server. Please check your network " + "connection and try again.";
-	private Button clearBtn, clearEntryBtn, decimalBtn, signBtn, percentBtn, resultBtn, convertToBinaryBtn;
-	private List<Button> numBtn = new ArrayList<Button>();
-	private List<Button> operatorsBtn = new ArrayList<Button>();
+	private TextButton clearBtn, clearEntryBtn, decimalBtn, signBtn, percentBtn, resultBtn, convertToBinaryBtn;
+	private List<TextButton> numBtn = new ArrayList<TextButton>();
+	private List<TextButton> operatorsBtn = new ArrayList<TextButton>();
 	private final String[] operators = { "+", "-", "*", "/" };
 	private boolean newLine = false;
 	private String lastOperator = "";
@@ -50,26 +51,53 @@ public class SimpleCalculator implements EntryPoint {
 
 		errorLabel = new Label();
 
+		int minWidth = 80;
+
 		// Set values to buttons
-		signBtn = new Button("+/-");
-		percentBtn = new Button("%");
-		clearBtn = new Button("C");
-		clearEntryBtn = new Button("CE");
-		decimalBtn = new Button(".");
-		resultBtn = new Button("=");
-		convertToBinaryBtn = new Button("Dec -> Bin");
+		signBtn = new TextButton("+/-");
+		signBtn.setMinWidth(minWidth);
+		signBtn.setScale(ButtonScale.LARGE);
+		signBtn.setStylePrimaryName("btn");
+		percentBtn = new TextButton("%");
+		percentBtn.setScale(ButtonScale.LARGE);
+		percentBtn.setMinWidth(minWidth);
+		clearBtn = new TextButton("C");
+		clearBtn.setScale(ButtonScale.LARGE);
+		clearBtn.setMinWidth(minWidth);
+		clearEntryBtn = new TextButton("CE");
+		clearEntryBtn.setScale(ButtonScale.LARGE);
+		clearEntryBtn.setMinWidth(minWidth);
+		decimalBtn = new TextButton(".");
+		decimalBtn.setScale(ButtonScale.LARGE);
+		decimalBtn.setMinWidth(minWidth);
+		resultBtn = new TextButton("=");
+		resultBtn.setScale(ButtonScale.LARGE);
+		resultBtn.setMinWidth(minWidth);
+		convertToBinaryBtn = new TextButton("Dec -> Bin");
+		convertToBinaryBtn.setScale(ButtonScale.LARGE);
+		convertToBinaryBtn.setMinWidth(minWidth);
 		for (int i = 0; i < operators.length; i++) {
-			operatorsBtn.add(new Button(operators[i]));
+			TextButton opBtn = new TextButton(operators[i]);
+			opBtn.setScale(ButtonScale.LARGE);
+			opBtn.setMinWidth(minWidth);
+			operatorsBtn.add(opBtn);
 		}
 		for (int i = 0; i < 10; i++) {
-			numBtn.add(new Button(String.valueOf(i)));
+			TextButton opBtn = new TextButton(String.valueOf(i));
+			opBtn.setScale(ButtonScale.LARGE);
+			opBtn.setMinWidth(minWidth);
+			opBtn.setStylePrimaryName("opBtn");
+			numBtn.add(opBtn);
 		}
 
 		// Default result value
 		resultField.setText("0");
+		resultField.setStylePrimaryName("result");
 
 		// Container of the calculator
 		FlexTable flexTable = new FlexTable();
+		flexTable.setCellSpacing(10);
+		flexTable.setStylePrimaryName("tableCalc");
 		flexTable.setWidget(0, 0, resultField);
 		flexTable.setWidget(0, 1, clearBtn);
 		flexTable.setWidget(0, 2, clearEntryBtn);
@@ -109,89 +137,84 @@ public class SimpleCalculator implements EntryPoint {
 		resultField.selectAll();
 
 		// Create a handler for the numBtn
-		class NumButtonHandler implements ClickHandler {
-			/**
-			 * Fired when the user clicks on one numBtn.
-			 */
-			public void onClick(ClickEvent event) {
+		SelectHandler numButtonHandler = new SelectHandler() {
+
+			@Override
+			public void onSelect(SelectEvent event) {
 				Widget sender = (Widget) event.getSource();
 				String pressed = sender.getElement().getInnerText();
 				number(pressed);
 			}
-		}
+		};
 
 		// Create a handler for the clearBtn
-		class ClearButtonHandler implements ClickHandler {
-			/**
-			 * Fired when the user clicks on clear numBtn.
-			 */
-			public void onClick(ClickEvent event) {
+
+		SelectHandler clearButtonHandler = new SelectHandler() {
+
+			@Override
+			public void onSelect(SelectEvent event) {
 				resultField.setText("0");
 				newLine = true;
 				subresult = 0.0;
 				lastOperator = "";
 			}
-		}
+		};
 
-		// Create a handler for the clearBtn
-		class ClearEntryButtonHandler implements ClickHandler {
-			/**
-			 * Fired when the user clicks on one numBtn.
-			 */
-			public void onClick(ClickEvent event) {
+		// Create a handler for the clearBtn SelectHandler
+		SelectHandler clearEntryButtonHandler = new SelectHandler() {
+
+			@Override
+			public void onSelect(SelectEvent event) {
 				resultField.setText("0");
 				newLine = true;
 			}
-		}
+		};
 
-		// Create a handler for the decimalBtn
-		class DecimalButtonHandler implements ClickHandler {
-			/**
-			 * Fired when the user clicks on one numBtn.
-			 */
-			public void onClick(ClickEvent event) {
+		// Create a handler for the decimalBtn SelectHandler
+		SelectHandler decimalButtonHandler = new SelectHandler() {
+
+			@Override
+			public void onSelect(SelectEvent event) {
 				decimal();
 			}
-		}
+
+		};
 
 		// Create a handler for the signBtn
-		class SignButtonHandler implements ClickHandler {
-			/**
-			 * Fired when the user clicks on one numBtn.
-			 */
-			public void onClick(ClickEvent event) {
+		SelectHandler signButtonHandler = new SelectHandler() {
+
+			@Override
+			public void onSelect(SelectEvent event) {
 				changeSign();
 			}
-		}
+
+		};
 
 		// Create a handler for the percentBtn
-		class PercentButtonHandler implements ClickHandler {
-			/**
-			 * Fired when the user clicks on one numBtn.
-			 */
-			public void onClick(ClickEvent event) {
+		SelectHandler percentButtonHandler = new SelectHandler() {
+
+			@Override
+			public void onSelect(SelectEvent event) {
 				percent();
 			}
-		}
+		};
 
 		// Create a handler for the operators
-		class OperatorButtonHandler implements ClickHandler {
-			/**
-			 * Fired when the user clicks on operator button.
-			 */
-			public void onClick(ClickEvent event) {
+		SelectHandler operatorButtonHandler = new SelectHandler() {
+
+			@Override
+			public void onSelect(SelectEvent event) {
 				Widget sender = (Widget) event.getSource();
 				operation();
 				lastOperator = sender.getElement().getInnerText();
 			}
-		}
+		};
 
 		// Create a handler for the convertToBinaryBtn
-		class ConvertToBinaryHandler implements ClickHandler {
-			/**
-			 * Fired when the user clicks on the convert to binary button.
-			 */
-			public void onClick(ClickEvent event) {
+		SelectHandler convertToBinaryHandler = new SelectHandler() {
+
+			@Override
+			public void onSelect(SelectEvent event) {
 				sendValueToServer();
 			}
 
@@ -222,38 +245,24 @@ public class SimpleCalculator implements EntryPoint {
 					}
 				});
 			}
-		}
+		};
 
 		// Set handlers
-		ClearButtonHandler clearButtonHandler = new ClearButtonHandler();
-		clearBtn.addClickHandler(clearButtonHandler);
+		clearBtn.addSelectHandler(clearButtonHandler);
+		clearEntryBtn.addSelectHandler(clearEntryButtonHandler);
+		resultBtn.addSelectHandler(operatorButtonHandler);
+		signBtn.addSelectHandler(signButtonHandler);
+		decimalBtn.addSelectHandler(decimalButtonHandler);
+		percentBtn.addSelectHandler(percentButtonHandler);
+		convertToBinaryBtn.addSelectHandler(convertToBinaryHandler);
 
-		ClearEntryButtonHandler clearEntryButtonHandler = new ClearEntryButtonHandler();
-		clearEntryBtn.addClickHandler(clearEntryButtonHandler);
-
-		OperatorButtonHandler operatorButtonHandler = new OperatorButtonHandler();
 		for (int i = 0; i < operators.length; i++) {
-			operatorsBtn.get(i).addClickHandler(operatorButtonHandler);
+			operatorsBtn.get(i).addSelectHandler(operatorButtonHandler);
 		}
-		resultBtn.addClickHandler(operatorButtonHandler);
 
-		NumButtonHandler numButtonHandler = new NumButtonHandler();
 		for (int i = 0; i < numBtn.size(); i++) {
-			numBtn.get(i).addClickHandler(numButtonHandler);
+			numBtn.get(i).addSelectHandler(numButtonHandler);
 		}
-
-		SignButtonHandler signButtonHandler = new SignButtonHandler();
-		signBtn.addClickHandler(signButtonHandler);
-
-		DecimalButtonHandler decimalButtonHandler = new DecimalButtonHandler();
-		decimalBtn.addClickHandler(decimalButtonHandler);
-
-		PercentButtonHandler percentButtonHandler = new PercentButtonHandler();
-		percentBtn.addClickHandler(percentButtonHandler);
-
-		// Add a handler to send the number to convert to the server
-		ConvertToBinaryHandler convertToBinaryHandler = new ConvertToBinaryHandler();
-		convertToBinaryBtn.addClickHandler(convertToBinaryHandler);
 	}
 
 	/**
@@ -283,16 +292,16 @@ public class SimpleCalculator implements EntryPoint {
 			Double operand = Double.parseDouble(resultField.getText());
 
 			switch (lastOperator) {
-			case "+":
+			case "\r\n+":
 				subresult += operand;
 				break;
-			case "-":
+			case "\r\n-":
 				subresult -= operand;
 				break;
-			case "*":
+			case "\r\n*":
 				subresult *= operand;
 				break;
-			case "/":
+			case "\r\n/":
 				subresult /= operand;
 				break;
 			default:
