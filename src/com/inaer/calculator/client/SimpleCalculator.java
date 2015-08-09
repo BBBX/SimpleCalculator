@@ -37,8 +37,8 @@ public class SimpleCalculator implements EntryPoint {
 	 * The message displayed to the user when the server cannot be reached or
 	 * returns an error.
 	 */
-	private static final String SERVER_ERROR = "An error occurred while "
-			+ "attempting to contact the server. Please check your network " + "connection and try again.";
+	private static final String SERVER_ERROR = "No se ha podido conectar con el servidor. "
+			+ "Por favor, comprueba tu conexion y vuelve a intentarlo otra vez en unos minutos.";
 	private TextButton clearBtn, clearEntryBtn, decimalBtn, signBtn, percentBtn, resultBtn, convertToBinaryBtn;
 	private List<TextButton> numBtn = new ArrayList<TextButton>();
 	private List<TextButton> operatorsBtn = new ArrayList<TextButton>();
@@ -63,9 +63,12 @@ public class SimpleCalculator implements EntryPoint {
 	public void onModuleLoad() {
 
 		errorLabel = new Label();
-
+		errorLabel.setVisible(false);
+		
 		int minWidth = 80;
-
+		errorLabel.setStylePrimaryName("errorMessage");
+		errorLabel.setStyleName("container", true);
+		
 		// Set values to buttons
 		signBtn = new TextButton("+/-");
 		signBtn.setMinWidth(minWidth);
@@ -146,7 +149,7 @@ public class SimpleCalculator implements EntryPoint {
 			}
 		});
 
-		getConversionList();
+		//getConversionList();
 
 		ConversionDTOProperties properties = GWT.create(ConversionDTOProperties.class);
 
@@ -187,7 +190,7 @@ public class SimpleCalculator implements EntryPoint {
 		TextButton updateButton = new TextButton("Actualizar");
 		updateButton.addSelectHandler(new SelectHandler() {
 			@Override
-			public void onSelect(SelectEvent event) {
+			public void onSelect(SelectEvent event) {				
 				getConversionList();
 			}
 		});
@@ -199,7 +202,7 @@ public class SimpleCalculator implements EntryPoint {
 		panel.setWidget(grid);
 		panel.addButton(resetButton);
 		panel.addButton(updateButton);
-
+		
 		// Add elements to containers in HTML page
 		RootPanel.get("errorLabelContainer").add(errorLabel);
 		RootPanel.get("calcContainer").add(flexTable);
@@ -249,7 +252,6 @@ public class SimpleCalculator implements EntryPoint {
 			public void onSelect(SelectEvent event) {
 				decimal();
 			}
-
 		};
 
 		// Create a handler for the signBtn
@@ -259,7 +261,6 @@ public class SimpleCalculator implements EntryPoint {
 			public void onSelect(SelectEvent event) {
 				changeSign();
 			}
-
 		};
 
 		// Create a handler for the percentBtn
@@ -295,19 +296,22 @@ public class SimpleCalculator implements EntryPoint {
 			 * response containing the value converted to binary representation.
 			 */
 			private void sendValueToServer() {
-				errorLabel.setText("");
+				errorLabel.setText("");		
+				errorLabel.setVisible(false);
+				convertToBinaryBtn.setEnabled(false);
 				String valueToServer = resultField.getText();
 
 				if (!FieldVerifier.isValidNumber(valueToServer)) {
 					errorLabel.setText("Wrong number format");
+					errorLabel.setVisible(true);
+					convertToBinaryBtn.setEnabled(true);
 					return;
-				}
-
-				convertToBinaryBtn.setEnabled(false);
+				}				
 
 				calculatorService.convertToBinary(valueToServer, new AsyncCallback<String>() {
 					public void onFailure(Throwable caught) {
 						errorLabel.setText(SERVER_ERROR);
+						convertToBinaryBtn.setEnabled(true);
 					}
 
 					public void onSuccess(String result) {

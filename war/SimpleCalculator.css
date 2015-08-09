@@ -31,8 +31,10 @@ body {
 	width: 100%;
 }
 
-.serverResponseLabelError {
-	color: red;
+.errorMessage {
+	font-size: 12px;
+	background: #f2dede;
+	padding: 20px;
 }
 
 h1 {
