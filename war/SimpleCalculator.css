@@ -5,13 +5,24 @@
 	-webkit-box-sizing: border-box;
 }
 
-.tableCalc {
+body {
+	font-family: Arial, sans-serif;
+}
+
+.container {
 	border: solid 1px #ddd;
 	border-radius: 15px;
-	margin: 0 auto;
+	margin: 20px auto;
 	padding: 20px 30px;
 	background: #f6f6f6;
 	box-shadow: 2px 2px 2px 0 #ccc;
+	width: 550px;
+}
+
+.grid table * {
+	box-sizing: content-box;
+	-moz-box-sizing: content-box;
+	-webkit-box-sizing: content-box;
 }
 
 .result {
@@ -20,23 +31,11 @@
 	width: 100%;
 }
 
-.btn {
-	border: solid 2px #f00;
-	width: 100%;
-	border: none;
-	background-image: none;
-}
-
-.opBtn {
-	border: none !important;
-}
-
 .serverResponseLabelError {
 	color: red;
 }
 
 h1 {
-	font-family: Arial, sans-serif;
 	color: #666;
 	font-size: 30px !important;
 	text-align: center;

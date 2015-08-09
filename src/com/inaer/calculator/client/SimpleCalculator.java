@@ -2,21 +2,32 @@ package com.inaer.calculator.client;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
+import com.google.gwt.cell.client.DateCell;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
+import com.inaer.calculator.shared.ConversionDTO;
 import com.inaer.calculator.shared.FieldVerifier;
 import com.sencha.gxt.cell.core.client.ButtonCell.ButtonScale;
+import com.sencha.gxt.data.shared.ListStore;
+import com.sencha.gxt.data.shared.ModelKeyProvider;
+import com.sencha.gxt.widget.core.client.FramedPanel;
 import com.sencha.gxt.widget.core.client.button.TextButton;
 import com.sencha.gxt.widget.core.client.event.SelectEvent;
 import com.sencha.gxt.widget.core.client.event.SelectEvent.SelectHandler;
+import com.sencha.gxt.widget.core.client.grid.ColumnConfig;
+import com.sencha.gxt.widget.core.client.grid.ColumnModel;
+import com.sencha.gxt.widget.core.client.grid.Grid;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -37,10 +48,12 @@ public class SimpleCalculator implements EntryPoint {
 	private Double subresult = 0.0;
 	private TextBox resultField = new TextBox();
 	private Label errorLabel;
+	private ListStore<ConversionDTO> store;
+	private Grid<ConversionDTO> grid;
 
 	/**
 	 * Create a remote service proxy to talk to the server-side Calculator
-	 * service.
+	 * service.5
 	 */
 	private final CalculatorServiceAsync calculatorService = GWT.create(CalculatorService.class);
 
@@ -57,7 +70,6 @@ public class SimpleCalculator implements EntryPoint {
 		signBtn = new TextButton("+/-");
 		signBtn.setMinWidth(minWidth);
 		signBtn.setScale(ButtonScale.LARGE);
-		signBtn.setStylePrimaryName("btn");
 		percentBtn = new TextButton("%");
 		percentBtn.setScale(ButtonScale.LARGE);
 		percentBtn.setMinWidth(minWidth);
@@ -86,7 +98,6 @@ public class SimpleCalculator implements EntryPoint {
 			TextButton opBtn = new TextButton(String.valueOf(i));
 			opBtn.setScale(ButtonScale.LARGE);
 			opBtn.setMinWidth(minWidth);
-			opBtn.setStylePrimaryName("opBtn");
 			numBtn.add(opBtn);
 		}
 
@@ -97,7 +108,7 @@ public class SimpleCalculator implements EntryPoint {
 		// Container of the calculator
 		FlexTable flexTable = new FlexTable();
 		flexTable.setCellSpacing(10);
-		flexTable.setStylePrimaryName("tableCalc");
+		flexTable.setStylePrimaryName("container");
 		flexTable.setWidget(0, 0, resultField);
 		flexTable.setWidget(0, 1, clearBtn);
 		flexTable.setWidget(0, 2, clearEntryBtn);
@@ -128,9 +139,71 @@ public class SimpleCalculator implements EntryPoint {
 		flexTable.getFlexCellFormatter().setColSpan(0, 0, 3);
 		flexTable.getFlexCellFormatter().setColSpan(4, 2, 2);
 
+		store = new ListStore<ConversionDTO>(new ModelKeyProvider<ConversionDTO>() {
+			@Override
+			public String getKey(ConversionDTO item) {
+				return "" + item.getKey();
+			}
+		});
+
+		getConversionList();
+
+		ConversionDTOProperties properties = GWT.create(ConversionDTOProperties.class);
+
+		ColumnConfig<ConversionDTO, Date> dateColumn = new ColumnConfig<ConversionDTO, Date>(
+				properties.timeOfConversion(), 150, "Fecha");
+		ColumnConfig<ConversionDTO, String> decimalColumn = new ColumnConfig<ConversionDTO, String>(
+				properties.decimalNumber(), 150, "Decimal");
+		ColumnConfig<ConversionDTO, String> binaryColumn = new ColumnConfig<ConversionDTO, String>(
+				properties.binaryNumber(), 150, "Binario");
+
+		dateColumn.setCell(new DateCell(DateTimeFormat.getFormat(PredefinedFormat.DATE_TIME_SHORT)));
+
+		// Columns
+		List<ColumnConfig<ConversionDTO, ?>> columns = new ArrayList<ColumnConfig<ConversionDTO, ?>>();
+		columns.add(dateColumn);
+		columns.add(decimalColumn);
+		columns.add(binaryColumn);
+
+		ColumnModel<ConversionDTO> cm = new ColumnModel<ConversionDTO>(columns);
+
+		// Display the conversion list in a grid
+		grid = new Grid<ConversionDTO>(store, cm);
+		grid.getView().setStripeRows(true);
+		grid.getView().setColumnLines(true);
+		grid.setStylePrimaryName("grid");
+		grid.setBorders(false);
+		grid.setColumnReordering(false);
+		grid.getView().setAutoExpandColumn(binaryColumn);
+
+		TextButton resetButton = new TextButton("Borrar");
+		resetButton.addSelectHandler(new SelectHandler() {
+			@Override
+			public void onSelect(SelectEvent event) {
+				store.clear();
+			}
+		});
+		
+		TextButton updateButton = new TextButton("Actualizar");
+		updateButton.addSelectHandler(new SelectHandler() {
+			@Override
+			public void onSelect(SelectEvent event) {
+				getConversionList();
+			}
+		});
+
+		FramedPanel panel = new FramedPanel();
+		panel.setCollapsible(true);
+		panel.setHeadingText("Historico de conversiones decimal a binario");
+		panel.addStyleName("container");
+		panel.setWidget(grid);
+		panel.addButton(resetButton);
+		panel.addButton(updateButton);
+
 		// Add elements to containers in HTML page
 		RootPanel.get("errorLabelContainer").add(errorLabel);
 		RootPanel.get("calcContainer").add(flexTable);
+		RootPanel.get("accessListContainer").add(panel);
 
 		// Focus the cursor on the result field when the app loads
 		resultField.setFocus(true);
@@ -148,7 +221,6 @@ public class SimpleCalculator implements EntryPoint {
 		};
 
 		// Create a handler for the clearBtn
-
 		SelectHandler clearButtonHandler = new SelectHandler() {
 
 			@Override
@@ -160,7 +232,7 @@ public class SimpleCalculator implements EntryPoint {
 			}
 		};
 
-		// Create a handler for the clearBtn SelectHandler
+		// Create a handler for the clearEntryBtn
 		SelectHandler clearEntryButtonHandler = new SelectHandler() {
 
 			@Override
@@ -170,7 +242,7 @@ public class SimpleCalculator implements EntryPoint {
 			}
 		};
 
-		// Create a handler for the decimalBtn SelectHandler
+		// Create a handler for the decimalBtn
 		SelectHandler decimalButtonHandler = new SelectHandler() {
 
 			@Override
@@ -282,8 +354,8 @@ public class SimpleCalculator implements EntryPoint {
 	}
 
 	/**
-	 * Performs an operation using the accumulated value and the current value
-	 * of the result field.
+	 * Perform an operation using the accumulated value and the current value of
+	 * the result field.
 	 */
 	private void operation() {
 		if (newLine && lastOperator != "=") {
@@ -315,9 +387,9 @@ public class SimpleCalculator implements EntryPoint {
 	}
 
 	/**
-	 * Inserts the pressed number to the result field. If current value of
-	 * result field is zero or the flag of new line is activated, the number
-	 * will be concatenated with the current value.
+	 * Insert the pressed number to the result field. If current value of result
+	 * field is zero or the flag of new line is activated, the number will be
+	 * concatenated with the current value.
 	 */
 	private void number(String pressed) {
 		if (newLine || resultField.getText().equals("0")) {
@@ -329,7 +401,7 @@ public class SimpleCalculator implements EntryPoint {
 	}
 
 	/**
-	 * Calculates the percentage value of the accumulated result with the value
+	 * Calculate the percentage value of the accumulated result with the value
 	 * of the result field.
 	 */
 	private void percent() {
@@ -339,10 +411,26 @@ public class SimpleCalculator implements EntryPoint {
 	}
 
 	/**
-	 * Inverts the sign of the current value.
+	 * Invert the sign of the current value.
 	 */
 	private void changeSign() {
 		BigDecimal output = new BigDecimal(String.valueOf(Double.parseDouble(resultField.getText()) * -1));
 		resultField.setText(output.stripTrailingZeros().toPlainString());
+	}
+
+	private void getConversionList() {
+		calculatorService.retrieveAccesList(new AsyncCallback<List<ConversionDTO>>() {
+			public void onFailure(Throwable caught) {
+				errorLabel.setText(SERVER_ERROR);
+			}
+
+			public void onSuccess(List<ConversionDTO> result) {
+				try {
+					store.replaceAll(result);
+				} catch (Exception ex) {
+					ex.printStackTrace();
+				}
+			}
+		});
 	}
 }

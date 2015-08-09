@@ -1,0 +1,2 @@
+# Module com.inaer.calculator.SimpleCalculator.JUnit
+# RPC service class, partial path of RPC policy file
