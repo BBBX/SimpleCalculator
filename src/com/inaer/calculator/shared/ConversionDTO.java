@@ -3,8 +3,6 @@ package com.inaer.calculator.shared;
 import java.io.Serializable;
 import java.util.Date;
 
-import com.google.appengine.api.datastore.Key;
-
 public class ConversionDTO implements Serializable {
 
 	private static final long serialVersionUID = 1L;

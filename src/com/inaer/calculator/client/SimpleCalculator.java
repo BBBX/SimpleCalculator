@@ -385,16 +385,16 @@ public class SimpleCalculator implements EntryPoint {
 			Double operand = Double.parseDouble(resultField.getText());
 
 			switch (lastOperator) {
-			case "\r\n+":
+			case "+":
 				subresult += operand;
 				break;
-			case "\r\n-":
+			case "-":
 				subresult -= operand;
 				break;
-			case "\r\n*":
+			case "*":
 				subresult *= operand;
 				break;
-			case "\r\n/":
+			case "/":
 				subresult /= operand;
 				break;
 			default:
