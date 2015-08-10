@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.inaer.calculator.client.CalculatorService;
-import com.inaer.calculator.server.dao.ConversionJpaDAO;
+import com.inaer.calculator.server.dao.FactoryDAO;
 import com.inaer.calculator.server.dao.IConversionDAO;
 import com.inaer.calculator.server.domain.Conversion;
 import com.inaer.calculator.shared.ConversionDTO;
@@ -53,7 +53,7 @@ public class CalculatorServiceImpl extends RemoteServiceServlet implements Calcu
 	 * 
 	 */
 	private void storeConversionOperation(Double inputNumber, String inputBinaryNumber) {
-		IConversionDAO conv = new ConversionJpaDAO();
+		IConversionDAO conv = FactoryDAO.getFactory(1).getConversionDAO();
 		conv.addConversion(String.valueOf(inputNumber), inputBinaryNumber);
 	}
 
@@ -79,7 +79,7 @@ public class CalculatorServiceImpl extends RemoteServiceServlet implements Calcu
 	 */
 	@Override
 	public List<ConversionDTO> retrieveAccesList() {
-		IConversionDAO convDAO = new ConversionJpaDAO();
+		IConversionDAO convDAO = FactoryDAO.getFactory(1).getConversionDAO();
 		List<Conversion> result = convDAO.listConversion();
 
 		// Creating Transfer Data Objects

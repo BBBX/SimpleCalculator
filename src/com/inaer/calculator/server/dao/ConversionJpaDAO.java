@@ -14,6 +14,11 @@ public class ConversionJpaDAO implements IConversionDAO {
 
 	/**
 	 * Convert a decimal number to its binary representation.
+	 * 
+	 * @param num
+	 *            decimal number to convert
+	 * @param binaryNum
+	 *            binary representation of the decimal number
 	 */
 	@Override
 	public void addConversion(String num, String binaryNum) {

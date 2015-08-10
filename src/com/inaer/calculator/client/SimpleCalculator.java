@@ -5,11 +5,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.google.gwt.cell.client.AbstractCell;
 import com.google.gwt.cell.client.DateCell;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
+import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.Label;
@@ -28,6 +30,7 @@ import com.sencha.gxt.widget.core.client.event.SelectEvent.SelectHandler;
 import com.sencha.gxt.widget.core.client.grid.ColumnConfig;
 import com.sencha.gxt.widget.core.client.grid.ColumnModel;
 import com.sencha.gxt.widget.core.client.grid.Grid;
+import com.sencha.gxt.widget.core.client.tips.QuickTip;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -64,11 +67,11 @@ public class SimpleCalculator implements EntryPoint {
 
 		errorLabel = new Label();
 		errorLabel.setVisible(false);
-		
+
 		int minWidth = 80;
 		errorLabel.setStylePrimaryName("errorMessage");
 		errorLabel.setStyleName("container", true);
-		
+
 		// Set values to buttons
 		signBtn = new TextButton("+/-");
 		signBtn.setMinWidth(minWidth);
@@ -149,7 +152,7 @@ public class SimpleCalculator implements EntryPoint {
 			}
 		});
 
-		//getConversionList();
+		getConversionList();
 
 		ConversionDTOProperties properties = GWT.create(ConversionDTOProperties.class);
 
@@ -161,6 +164,19 @@ public class SimpleCalculator implements EntryPoint {
 				properties.binaryNumber(), 150, "Binario");
 
 		dateColumn.setCell(new DateCell(DateTimeFormat.getFormat(PredefinedFormat.DATE_TIME_SHORT)));
+
+		decimalColumn.setCell(new AbstractCell<String>() {
+			@Override
+			public void render(Context context, String value, SafeHtmlBuilder sb) {
+				sb.appendHtmlConstant("<span qtitle='Numero decimal' qtip='" + value + "'>" + value + "</span>");
+			}
+		});
+		binaryColumn.setCell(new AbstractCell<String>() {
+			@Override
+			public void render(Context context, String value, SafeHtmlBuilder sb) {
+				sb.appendHtmlConstant("<span qtitle='Numero binario' qtip='" + value + "'>" + value + "</span>");
+			}
+		});
 
 		// Columns
 		List<ColumnConfig<ConversionDTO, ?>> columns = new ArrayList<ColumnConfig<ConversionDTO, ?>>();
@@ -178,6 +194,7 @@ public class SimpleCalculator implements EntryPoint {
 		grid.setBorders(false);
 		grid.setColumnReordering(false);
 		grid.getView().setAutoExpandColumn(binaryColumn);
+		new QuickTip(grid);
 
 		TextButton resetButton = new TextButton("Borrar");
 		resetButton.addSelectHandler(new SelectHandler() {
@@ -186,11 +203,11 @@ public class SimpleCalculator implements EntryPoint {
 				store.clear();
 			}
 		});
-		
+
 		TextButton updateButton = new TextButton("Actualizar");
 		updateButton.addSelectHandler(new SelectHandler() {
 			@Override
-			public void onSelect(SelectEvent event) {				
+			public void onSelect(SelectEvent event) {
 				getConversionList();
 			}
 		});
@@ -202,7 +219,7 @@ public class SimpleCalculator implements EntryPoint {
 		panel.setWidget(grid);
 		panel.addButton(resetButton);
 		panel.addButton(updateButton);
-		
+
 		// Add elements to containers in HTML page
 		RootPanel.get("errorLabelContainer").add(errorLabel);
 		RootPanel.get("calcContainer").add(flexTable);
@@ -296,7 +313,7 @@ public class SimpleCalculator implements EntryPoint {
 			 * response containing the value converted to binary representation.
 			 */
 			private void sendValueToServer() {
-				errorLabel.setText("");		
+				errorLabel.setText("");
 				errorLabel.setVisible(false);
 				convertToBinaryBtn.setEnabled(false);
 				String valueToServer = resultField.getText();
@@ -306,7 +323,7 @@ public class SimpleCalculator implements EntryPoint {
 					errorLabel.setVisible(true);
 					convertToBinaryBtn.setEnabled(true);
 					return;
-				}				
+				}
 
 				calculatorService.convertToBinary(valueToServer, new AsyncCallback<String>() {
 					public void onFailure(Throwable caught) {
