@@ -384,7 +384,7 @@ public class SimpleCalculator implements EntryPoint {
 		} else {
 			Double operand = Double.parseDouble(resultField.getText());
 
-			switch (lastOperator) {
+			switch (lastOperator.trim()) {
 			case "+":
 				subresult += operand;
 				break;
